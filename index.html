@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>THE TRANSPARENCY SHADOW</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              inter: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+              mono: ["Roboto Mono", "SFMono-Regular", "Consolas", "monospace"],
+            },
+            colors: {
+              carbon: "#020402",
+              matrix: "#00FF41",
+              matrixdim: "#008F2F",
+              phosphor: "#D8FFE0",
+              surveillance: "#FF0033",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --carbon: #020402;
+        --carbon-2: #061107;
+        --matrix-green: #00ff41;
+        --matrix-dim: #008f2f;
+        --phosphor: #d8ffe0;
+        --surveillance-red: #ff0033;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background:
+          linear-gradient(rgba(0, 255, 65, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 255, 65, 0.026) 1px, transparent 1px),
+          radial-gradient(circle at 48% 0%, rgba(0, 255, 65, 0.14), transparent 31rem),
+          radial-gradient(circle at 82% 74%, rgba(255, 0, 51, 0.05), transparent 24rem),
+          var(--carbon);
+        background-size: 32px 32px, 32px 32px, auto, auto, auto;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(0, 255, 65, 0.06), rgba(0, 255, 65, 0) 14%),
+          repeating-linear-gradient(
+            0deg,
+            rgba(0, 255, 65, 0.075) 0,
+            rgba(0, 255, 65, 0.075) 1px,
+            transparent 1px,
+            transparent 6px
+          );
+        mix-blend-mode: screen;
+        opacity: 0.24;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 50% 50%, transparent 0, rgba(0, 0, 0, 0.06) 42%, rgba(0, 0, 0, 0.76) 100%),
+          linear-gradient(90deg, rgba(0, 255, 65, 0.09), transparent 22%, transparent 78%, rgba(0, 255, 65, 0.07));
+      }
+
+      #canvas-host,
+      #canvas-host canvas {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 0;
+      }
+
+      .glass {
+        background: rgba(0, 14, 6, 0.64);
+        border: 1px solid rgba(0, 255, 65, 0.22);
+        box-shadow:
+          0 20px 80px rgba(0, 0, 0, 0.58),
+          0 0 34px rgba(0, 255, 65, 0.08),
+          inset 0 1px 0 rgba(216, 255, 224, 0.08);
+        backdrop-filter: blur(12px) saturate(130%);
+        -webkit-backdrop-filter: blur(12px) saturate(130%);
+      }
+
+      .accent-line {
+        position: relative;
+      }
+
+      .accent-line::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--phosphor), var(--matrix-green), var(--matrix-dim));
+        box-shadow: 0 0 18px rgba(0, 255, 65, 0.82), 0 0 34px rgba(0, 255, 65, 0.36);
+      }
+
+      .red-glow {
+        text-shadow:
+          0 0 10px rgba(216, 255, 224, 0.55),
+          0 0 28px rgba(0, 255, 65, 0.4),
+          0 0 72px rgba(0, 255, 65, 0.18);
+      }
+
+      .terminal-frame {
+        position: relative;
+      }
+
+      .terminal-frame::after {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border: 1px solid rgba(0, 255, 65, 0.12);
+        pointer-events: none;
+      }
+
+      .data-feed-line {
+        display: block;
+        border-bottom: 1px solid rgba(0, 255, 65, 0.07);
+        padding: 0.22rem 0;
+        white-space: nowrap;
+      }
+
+      .status-pulse {
+        animation: pulse-dot 1.6s ease-in-out infinite;
+      }
+
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          opacity: 0.38;
+          box-shadow: 0 0 0 rgba(0, 255, 65, 0);
+        }
+        50% {
+          opacity: 1;
+          box-shadow: 0 0 18px rgba(0, 255, 65, 0.9);
+        }
+      }
+
+      ::selection {
+        background: rgba(0, 255, 65, 0.34);
+        color: #ffffff;
+      }
+
+      @media (max-width: 768px) {
+        html,
+        body {
+          overflow-y: auto;
+        }
+
+        body {
+          min-height: 100svh;
+        }
+      }
+    </style>
+  </head>
+  <body class="text-phosphor antialiased">
+    <div id="canvas-host" aria-hidden="true"></div>
+
+    <main class="relative z-10 flex min-h-svh flex-col justify-between px-5 py-5 sm:px-8 sm:py-7 lg:px-10">
+      <header class="flex items-start justify-between gap-4">
+        <div class="glass terminal-frame rounded-sm px-4 py-3 sm:px-5">
+          <p class="font-mono text-[10px] font-medium uppercase tracking-[0.34em] text-matrix/58">
+            Root Trace Monitor
+          </p>
+          <h1 class="mt-1 font-mono text-sm font-semibold uppercase tracking-[0.22em] text-phosphor sm:text-base">
+            THE TRANSPARENCY SHADOW
+          </h1>
+        </div>
+
+        <div class="glass terminal-frame hidden rounded-sm px-4 py-3 text-right font-mono text-[10px] uppercase tracking-[0.24em] text-matrix/62 sm:block">
+          <div class="flex items-center justify-end gap-2">
+            <span class="status-pulse h-2 w-2 rounded-full bg-matrix"></span>
+            <span>Root Capture</span>
+          </div>
+          <div id="event-count" class="mt-1 text-phosphor">0 indexed events</div>
+        </div>
+      </header>
+
+      <aside
+        class="glass terminal-frame fixed left-5 right-5 top-[7.5rem] z-20 max-h-[15rem] overflow-y-auto overflow-x-hidden rounded-sm p-4 sm:left-auto sm:right-8 sm:top-32 sm:w-[25rem]"
+        aria-label="Browser-visible identity telemetry"
+      >
+        <div class="flex items-center justify-between border-b border-matrix/20 pb-3">
+          <div class="min-w-0">
+            <p class="font-mono text-[10px] uppercase tracking-[0.32em] text-matrix/48">Identity Dump</p>
+            <p class="mt-1 truncate font-mono text-xs uppercase tracking-[0.18em] text-phosphor">/proc/browser_fingerprint</p>
+          </div>
+          <button
+            id="trace-ip"
+            class="pointer-events-auto ml-3 shrink-0 border border-matrix/35 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-matrix transition hover:border-phosphor hover:bg-matrix/10 hover:text-phosphor"
+            type="button"
+          >
+            Refresh_IP
+          </button>
+        </div>
+        <div class="mt-3 space-y-2 font-mono text-[10px] uppercase tracking-[0.12em] text-matrix/70">
+          <div class="flex justify-between gap-4 border-b border-matrix/10 pb-1">
+            <span>Public IP</span>
+            <span id="ip-address" class="max-w-[13rem] truncate text-right text-surveillance">Tracing...</span>
+          </div>
+          <div class="border-t border-matrix/20 pt-2">
+            <p class="text-matrix/48">Current-origin cookies</p>
+            <p id="cookie-readout" class="mt-1 break-all normal-case tracking-normal text-phosphor/78">Scanning...</p>
+          </div>
+          <div id="fingerprint-list" class="space-y-1"></div>
+        </div>
+      </aside>
+
+      <section class="pointer-events-none flex flex-1 items-center">
+        <div class="accent-line glass terminal-frame max-w-3xl rounded-sm px-5 py-6 pl-7 sm:px-8 sm:py-8 sm:pl-10 lg:ml-[5vw]">
+          <p class="font-mono text-[10px] font-semibold uppercase tracking-[0.45em] text-matrix/80">
+            Terminal Exposure Protocol
+          </p>
+          <h2 class="red-glow mt-4 max-w-2xl text-balance font-mono text-5xl font-extrabold uppercase leading-[0.9] text-phosphor sm:text-7xl lg:text-8xl">
+            PRIVATE IS PUBLIC
+          </h2>
+          <p class="mt-5 max-w-2xl font-mono text-sm leading-7 text-matrix/72 sm:text-base">
+            Every move you make is a data point in someone else's ledger.
+          </p>
+        </div>
+      </section>
+
+      <aside
+        class="glass terminal-frame fixed bottom-5 left-5 right-5 z-20 rounded-sm p-4 sm:bottom-7 sm:left-auto sm:right-8 sm:w-[25rem]"
+        aria-label="Live user action data feed"
+      >
+        <div class="flex items-center justify-between border-b border-matrix/20 pb-3">
+          <div>
+            <p class="font-mono text-[10px] uppercase tracking-[0.32em] text-matrix/48">Data Feed</p>
+            <p class="mt-1 font-mono text-xs uppercase tracking-[0.18em] text-phosphor">/var/log/action_stream</p>
+          </div>
+          <div class="flex gap-1.5" aria-hidden="true">
+            <span class="h-2 w-2 rounded-full bg-matrix shadow-[0_0_14px_rgba(0,255,65,0.9)]"></span>
+            <span class="h-2 w-2 rounded-full bg-matrixdim shadow-[0_0_12px_rgba(0,143,47,0.8)]"></span>
+            <span class="h-2 w-2 rounded-full bg-surveillance/80 shadow-[0_0_12px_rgba(255,0,51,0.72)]"></span>
+          </div>
+        </div>
+        <div
+          id="data-feed"
+          class="mt-3 h-36 overflow-hidden font-mono text-[11px] leading-relaxed text-matrix/62 sm:h-44"
+        >
+          <span class="data-feed-line text-phosphor">&gt; /dev/shadow_trace mounted</span>
+          <span class="data-feed-line">&gt; IDENTITY_LAYER :: porous</span>
+          <span class="data-feed-line">&gt; MATRIX_RAIN :: synchronized</span>
+        </div>
+      </aside>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+    <script>
+      const feedEl = document.getElementById("data-feed");
+      const eventCountEl = document.getElementById("event-count");
+      const fingerprintListEl = document.getElementById("fingerprint-list");
+      const cookieReadoutEl = document.getElementById("cookie-readout");
+      const ipAddressEl = document.getElementById("ip-address");
+      const traceIpButton = document.getElementById("trace-ip");
+      const feedLines = [
+        "> /dev/shadow_trace mounted",
+        "> IDENTITY_LAYER :: porous",
+        "> MATRIX_RAIN :: synchronized",
+      ];
+
+      let eventCount = 0;
+      let trails = [];
+      let ripples = [];
+      let metadataBursts = [];
+      let matrixColumns = [];
+      let lastMoveLoggedAt = 0;
+      let lastTrailAt = 0;
+      let pointerIdleX = 0;
+      let pointerIdleY = 0;
+
+      const maxTrailPoints = 620;
+      const maxFeedLines = 18;
+      const matrixGreen = [0, 255, 65];
+      const matrixDim = [0, 143, 47];
+      const phosphor = [216, 255, 224];
+      const alertRed = [255, 0, 51];
+      const matrixGlyphs = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&*+-/<>[]{}";
+
+      function pad2(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function currentTimestamp() {
+        const now = new Date();
+        return `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}.${String(now.getMilliseconds()).padStart(3, "0")}`;
+      }
+
+      function addFeed(line, accent = false) {
+        eventCount += 1;
+        feedLines.unshift(line);
+
+        while (feedLines.length > maxFeedLines) {
+          feedLines.pop();
+        }
+
+        feedEl.innerHTML = feedLines
+          .map((entry, index) => {
+            const alpha = Math.max(0.2, 1 - index * 0.06).toFixed(2);
+            const color = accent && index === 0 ? "text-surveillance" : index === 0 ? "text-phosphor" : "";
+            return `<span class="data-feed-line ${color}" style="opacity:${alpha}">${entry}</span>`;
+          })
+          .join("");
+
+        eventCountEl.textContent = `${eventCount} indexed event${eventCount === 1 ? "" : "s"}`;
+      }
+
+      function shortHash(x, y) {
+        const raw = Math.abs(Math.floor(x * 92821 + y * 68917 + Date.now() * 0.017)) % 0xffffff;
+        return raw.toString(16).toUpperCase().padStart(6, "0");
+      }
+
+      function userAgentLabel() {
+        const ua = navigator.userAgent;
+        if (/Firefox/i.test(ua)) return "Firefox";
+        if (/Edg/i.test(ua)) return "Edge";
+        if (/Chrome/i.test(ua)) return "Chrome";
+        if (/Safari/i.test(ua)) return "Safari";
+        return "Unknown-Agent";
+      }
+
+      function renderFingerprint() {
+        const options = Intl.DateTimeFormat().resolvedOptions();
+        const rows = [
+          ["Agent", userAgentLabel()],
+          ["OS", navigator.platform || "unknown"],
+          ["Lang", navigator.language || "unknown"],
+          ["Zone", options.timeZone || "unknown"],
+          ["Screen", `${screen.width}x${screen.height}@${screen.colorDepth}`],
+          ["Viewport", `${window.innerWidth}x${window.innerHeight}`],
+          ["CPU", `${navigator.hardwareConcurrency || "?"} cores`],
+          ["Memory", navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "masked"],
+          ["DNT", navigator.doNotTrack || "unspecified"],
+        ];
+
+        fingerprintListEl.innerHTML = rows
+          .map(
+            ([label, value]) => `
+              <div class="flex justify-between gap-4 border-b border-matrix/10 pb-1">
+                <span>${label}</span>
+                <span class="max-w-[13rem] truncate text-right text-phosphor/82">${value}</span>
+              </div>
+            `,
+          )
+          .join("");
+
+        cookieReadoutEl.textContent = readCurrentOriginCookies();
+      }
+
+      function readCurrentOriginCookies() {
+        try {
+          const cookies = document.cookie;
+          if (cookies) return cookies;
+          if (window.location.protocol === "file:") return "none visible on file:// origin";
+          return "none visible to this origin";
+        } catch (error) {
+          return "cookie access blocked by browser";
+        }
+      }
+
+      async function tracePublicIp() {
+        traceIpButton.disabled = true;
+        traceIpButton.textContent = "Tracing...";
+        ipAddressEl.textContent = "requesting";
+        addFeed("> IP_TRACE_AUTO :: outbound lookup requested", true);
+
+        try {
+          const response = await fetch("https://api.ipify.org?format=json", { cache: "no-store" });
+          if (!response.ok) throw new Error("lookup failed");
+          const data = await response.json();
+          ipAddressEl.textContent = data.ip || "masked";
+          addFeed(`> IP_TRACE_RESULT :: ${data.ip || "masked"}`, true);
+        } catch (error) {
+          ipAddressEl.textContent = "blocked";
+          addFeed("> IP_TRACE_FAILED :: endpoint blocked", true);
+        } finally {
+          traceIpButton.textContent = "Refresh_IP";
+          traceIpButton.disabled = false;
+        }
+      }
+
+      function setup() {
+        const canvas = createCanvas(windowWidth, windowHeight);
+        canvas.parent("canvas-host");
+        pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
+        textFont("Roboto Mono");
+        initMatrixRain();
+        pointerIdleX = width * 0.5;
+        pointerIdleY = height * 0.5;
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        initMatrixRain();
+        renderFingerprint();
+      }
+
+      function draw() {
+        clear();
+        drawMatrixRain();
+        drawAmbientGrid();
+        drawPointerTrace();
+        drawRipples();
+        drawMetadataBursts();
+      }
+
+      function initMatrixRain() {
+        const spacing = width < 720 ? 18 : 22;
+        const count = Math.ceil(width / spacing) + 2;
+
+        matrixColumns = Array.from({ length: count }, (_, index) => ({
+          x: index * spacing + random(-4, 4),
+          y: random(-height, height),
+          speed: random(0.7, 2.8),
+          length: Math.floor(random(10, 28)),
+          spacing,
+          alpha: random(0.28, 0.72),
+          seed: Math.floor(random(matrixGlyphs.length)),
+        }));
+      }
+
+      function glyphAt(seed, index) {
+        const frame = Math.floor(frameCount * 0.16);
+        return matrixGlyphs[(seed + index * 11 + frame) % matrixGlyphs.length];
+      }
+
+      function drawMatrixRain() {
+        textFont("Roboto Mono");
+        textAlign(CENTER, TOP);
+        textSize(width < 720 ? 13 : 15);
+        noStroke();
+
+        matrixColumns.forEach((column) => {
+          column.y += column.speed * (deltaTime / 16.67);
+
+          if (column.y - column.length * column.spacing > height + 60) {
+            column.y = random(-220, -24);
+            column.speed = random(0.8, 3.2);
+            column.length = Math.floor(random(12, 32));
+            column.alpha = random(0.32, 0.82);
+            column.seed = Math.floor(random(matrixGlyphs.length));
+          }
+
+          for (let i = 0; i < column.length; i += 1) {
+            const y = column.y - i * column.spacing;
+            if (y < -24 || y > height + 24) continue;
+
+            const life = 1 - i / column.length;
+            const flicker = 0.74 + Math.sin(frameCount * 0.05 + column.seed + i) * 0.26;
+            const alpha = 210 * life * column.alpha * flicker;
+
+            if (i === 0) {
+              fill(phosphor[0], phosphor[1], phosphor[2], Math.min(210, alpha + 60));
+            } else {
+              fill(matrixGreen[0], matrixGreen[1], matrixGreen[2], alpha);
+            }
+
+            text(glyphAt(column.seed, i), column.x, y);
+          }
+        });
+      }
+
+      function drawAmbientGrid() {
+        const t = millis() * 0.00018;
+        strokeWeight(1);
+
+        for (let x = -44; x < width + 44; x += 88) {
+          const offset = Math.sin(t + x * 0.01) * 10;
+          stroke(0, 255, 65, 12);
+          line(x + offset, 0, x - offset * 0.4, height);
+        }
+
+        for (let y = -44; y < height + 44; y += 88) {
+          stroke(0, 143, 47, 14);
+          line(0, y, width, y + Math.sin(t + y * 0.02) * 4);
+        }
+      }
+
+      function drawPointerTrace() {
+        noStroke();
+        textAlign(LEFT, BASELINE);
+        textFont("Roboto Mono");
+
+        for (let i = trails.length - 1; i >= 0; i -= 1) {
+          const point = trails[i];
+          point.age += deltaTime;
+          point.x += point.vx;
+          point.y += point.vy;
+
+          const life = 1 - point.age / point.life;
+          if (life <= 0) {
+            trails.splice(i, 1);
+            continue;
+          }
+
+          const color = point.kind === "alert" ? alertRed : point.kind === "pale" ? phosphor : matrixGreen;
+          const pulse = 0.78 + Math.sin(point.age * 0.006 + point.seed) * 0.22;
+          const alpha = 205 * life * pulse;
+
+          fill(color[0], color[1], color[2], alpha);
+          circle(point.x, point.y, point.size * (0.8 + life * 1.4));
+
+          if (point.code && life > 0.3) {
+            fill(phosphor[0], phosphor[1], phosphor[2], Math.min(alpha, 122));
+            textSize(point.fontSize);
+            text(point.code, point.x + 8, point.y - 8);
+          }
+        }
+      }
+
+      function drawRipples() {
+        noFill();
+
+        for (let i = ripples.length - 1; i >= 0; i -= 1) {
+          const ripple = ripples[i];
+          ripple.age += deltaTime;
+
+          const life = 1 - ripple.age / ripple.life;
+          if (life <= 0) {
+            ripples.splice(i, 1);
+            continue;
+          }
+
+          const radius = ripple.radius + ripple.age * 0.21;
+          strokeWeight(1.2);
+          stroke(0, 255, 65, 185 * life);
+          circle(ripple.x, ripple.y, radius);
+          stroke(216, 255, 224, 95 * life);
+          circle(ripple.x, ripple.y, radius * 0.62);
+          stroke(255, 0, 51, 76 * life);
+          circle(ripple.x, ripple.y, radius * 1.28);
+
+          stroke(216, 255, 224, 54 * life);
+          line(ripple.x - radius * 0.52, ripple.y, ripple.x + radius * 0.52, ripple.y);
+          line(ripple.x, ripple.y - radius * 0.52, ripple.x, ripple.y + radius * 0.52);
+        }
+      }
+
+      function drawMetadataBursts() {
+        for (let i = metadataBursts.length - 1; i >= 0; i -= 1) {
+          const burst = metadataBursts[i];
+          burst.age += deltaTime;
+
+          const life = 1 - burst.age / burst.life;
+          if (life <= 0) {
+            metadataBursts.splice(i, 1);
+            continue;
+          }
+
+          const rise = burst.age * 0.028;
+          const x = constrain(burst.x + burst.driftX, 16, width - 260);
+          const y = constrain(burst.y - rise, 42, height - 120);
+
+          push();
+          translate(x, y);
+          textFont("Roboto Mono");
+          textAlign(LEFT, BASELINE);
+          textSize(11);
+          strokeWeight(1);
+          stroke(0, 255, 65, 64 * life);
+          fill(0, 10, 4, 178 * life);
+          rect(0, 0, burst.boxWidth, burst.lines.length * 18 + 22, 2);
+
+          burst.lines.forEach((line, index) => {
+            const isFirst = index === 0;
+            if (isFirst) {
+              fill(alertRed[0], alertRed[1], alertRed[2], 225 * life);
+            } else {
+              fill(matrixGreen[0], matrixGreen[1], matrixGreen[2], 168 * life);
+            }
+            text(line, 12, 24 + index * 18);
+          });
+          pop();
+        }
+      }
+
+      function mouseMoved() {
+        registerMove(mouseX, mouseY);
+      }
+
+      function touchMoved() {
+        if (touches.length) {
+          registerMove(touches[0].x, touches[0].y);
+        }
+        return false;
+      }
+
+      function mousePressed() {
+        registerClick(mouseX, mouseY);
+      }
+
+      function touchStarted() {
+        if (touches.length) {
+          registerClick(touches[0].x, touches[0].y);
+        }
+      }
+
+      function registerMove(x, y) {
+        const now = millis();
+        const dx = x - pointerIdleX;
+        const dy = y - pointerIdleY;
+        pointerIdleX = x;
+        pointerIdleY = y;
+
+        if (now - lastTrailAt > 9) {
+          const speed = Math.min(1, Math.sqrt(dx * dx + dy * dy) / 90);
+          trails.push({
+            x,
+            y,
+            vx: random(-0.16, 0.16),
+            vy: random(-0.16, 0.16),
+            age: 0,
+            life: random(2000, 5200),
+            size: random(1.7, 4.8) + speed * 2,
+            seed: random(1000),
+            kind: random() > 0.9 ? "pale" : "matrix",
+            fontSize: random(8, 11),
+            code: random() > 0.74 ? `0x${shortHash(x, y)}` : "",
+          });
+
+          while (trails.length > maxTrailPoints) {
+            trails.shift();
+          }
+
+          lastTrailAt = now;
+        }
+
+        if (now - lastMoveLoggedAt > 120) {
+          addFeed(`> MOUSE_MOVE ${Math.round(x)},${Math.round(y)} :: packet stored`);
+          lastMoveLoggedAt = now;
+        }
+      }
+
+      function registerClick(x, y) {
+        const timestamp = currentTimestamp();
+        ripples.push({
+          x,
+          y,
+          age: 0,
+          life: 2600,
+          radius: 18,
+        });
+
+        metadataBursts.push({
+          x: Math.min(x + 18, width - 280),
+          y: y - 12,
+          age: 0,
+          life: 4200,
+          driftX: random(-18, 18),
+          boxWidth: Math.min(308, Math.max(250, width - 36)),
+          lines: [
+            "!! CLICK_DETECTED",
+            `Timestamp: ${timestamp}`,
+            `Coordinates: ${Math.round(x)}, ${Math.round(y)}`,
+            `User-Agent: ${userAgentLabel()}`,
+            `Hash: 0x${shortHash(x, y)}`,
+          ],
+        });
+
+        addFeed(`> CLICK_DETECTED ${Math.round(x)},${Math.round(y)} :: metadata exposed`, true);
+
+        for (let i = 0; i < 36; i += 1) {
+          const angle = random(TWO_PI);
+          const distance = random(8, 68);
+          trails.push({
+            x: x + Math.cos(angle) * distance,
+            y: y + Math.sin(angle) * distance,
+            vx: Math.cos(angle) * random(0.1, 0.7),
+            vy: Math.sin(angle) * random(0.1, 0.7),
+            age: 0,
+            life: random(1600, 3800),
+            size: random(2, 5.8),
+            seed: random(1000),
+            kind: i % 5 === 0 ? "alert" : i % 3 === 0 ? "pale" : "matrix",
+            fontSize: random(8, 10),
+            code: i % 5 === 0 ? `0x${shortHash(x + i, y - i)}` : "",
+          });
+        }
+      }
+
+      renderFingerprint();
+      traceIpButton.addEventListener("click", tracePublicIp);
+      addFeed("> FINGERPRINT_SCAN :: browser fields indexed");
+      tracePublicIp();
+    </script>
+  </body>
+</html>
