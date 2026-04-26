@@ -427,6 +427,8 @@
       let satelliteZoom = 15;
       let satelliteLabel = "Satellite lock pending";
       let satelliteTileAnchor = { x: 0.5, y: 0.5 };
+      let satelliteReveal = null;
+      let satelliteRevealCells = [];
       let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const maxTrailPoints = 620;
@@ -719,11 +721,54 @@
 
         satelliteZoom = satelliteZoom === 15 ? 16 : 15;
         buildSatelliteTiles();
+        startSatelliteReveal(x, y);
         satelliteTargetAlpha = 0.92;
         leakEventCount += 1;
         addFeed(`> SATELLITE_TILE_SWAP :: ${geoTrace.city}, ${geoTrace.country}`, true);
+        addFeed("> MATRIX_PIXEL_REVEAL :: satellite layer decoding");
         addFeed(`> CLICK_COORDS_TO_ORBIT :: ${Math.round(x)},${Math.round(y)}`);
         updateMetrics();
+      }
+
+      function startSatelliteReveal(originX, originY) {
+        const cellSize = width < 720 ? 22 : 30;
+        const cols = Math.ceil(width / cellSize) + 1;
+        const rows = Math.ceil(height / cellSize) + 1;
+        const maxDistance = Math.max(
+          Math.hypot(originX, originY),
+          Math.hypot(width - originX, originY),
+          Math.hypot(originX, height - originY),
+          Math.hypot(width - originX, height - originY),
+        );
+        const cells = [];
+
+        for (let row = 0; row < rows; row += 1) {
+          for (let col = 0; col < cols; col += 1) {
+            const x = col * cellSize;
+            const y = row * cellSize;
+            const centerX = x + cellSize * 0.5;
+            const centerY = y + cellSize * 0.5;
+            const distanceRatio = Math.hypot(centerX - originX, centerY - originY) / maxDistance;
+            const jitter = random(0, reducedMotion ? 40 : 280);
+
+            cells.push({
+              x,
+              y,
+              delay: distanceRatio * (reducedMotion ? 120 : 740) + jitter,
+              duration: random(reducedMotion ? 120 : 260, reducedMotion ? 180 : 520),
+              glyph: matrixGlyphs[Math.floor(random(matrixGlyphs.length))],
+              tone: random() > 0.72 ? "hot" : random() > 0.45 ? "dim" : "dark",
+            });
+          }
+        }
+
+        satelliteRevealCells = cells;
+        satelliteReveal = {
+          startedAt: millis(),
+          cellSize,
+          originX,
+          originY,
+        };
       }
 
       function drawSatelliteBackdrop() {
@@ -762,6 +807,7 @@
         rect(0, 0, width, height);
         fill(0, 255, 65, 24 * satelliteAlpha);
         rect(0, 0, width, height);
+        drawSatellitePixelReveal();
 
         noFill();
         strokeWeight(1);
@@ -779,6 +825,44 @@
         fill(216, 255, 224, 180 * satelliteAlpha);
         text(`SATELLITE_VIEW :: ${satelliteLabel}`, 28, height - 28);
         pop();
+      }
+
+      function drawSatellitePixelReveal() {
+        if (!satelliteReveal || !satelliteRevealCells.length) return;
+
+        const elapsed = millis() - satelliteReveal.startedAt;
+        let activeCells = 0;
+
+        noStroke();
+        textAlign(CENTER, CENTER);
+        textFont("Roboto Mono");
+        textSize(Math.max(9, satelliteReveal.cellSize * 0.42));
+
+        satelliteRevealCells.forEach((cell) => {
+          const localElapsed = elapsed - cell.delay;
+          const progress = constrain(localElapsed / cell.duration, 0, 1);
+
+          if (progress >= 1) return;
+          activeCells += 1;
+
+          const coverAlpha = satelliteAlpha * (1 - progress);
+          const edgePulse = Math.sin(progress * Math.PI);
+          const baseGreen = cell.tone === "hot" ? 70 : cell.tone === "dim" ? 34 : 14;
+          fill(0, baseGreen, 16, 232 * coverAlpha);
+          rect(cell.x, cell.y, satelliteReveal.cellSize + 1, satelliteReveal.cellSize + 1);
+
+          if (progress > 0.08 && progress < 0.86) {
+            fill(0, 255, 65, (80 + edgePulse * 150) * satelliteAlpha);
+            rect(cell.x, cell.y, satelliteReveal.cellSize + 1, Math.max(2, satelliteReveal.cellSize * 0.08));
+            fill(216, 255, 224, (55 + edgePulse * 145) * satelliteAlpha);
+            text(cell.glyph, cell.x + satelliteReveal.cellSize * 0.5, cell.y + satelliteReveal.cellSize * 0.52);
+          }
+        });
+
+        if (activeCells === 0) {
+          satelliteReveal = null;
+          satelliteRevealCells = [];
+        }
       }
 
       function initMatrixRain() {
