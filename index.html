@@ -277,7 +277,7 @@
       </header>
 
       <aside
-        class="glass terminal-frame relative z-20 max-h-[15rem] overflow-y-auto overflow-x-hidden rounded-sm p-4 md:fixed md:left-auto md:right-8 md:top-32 md:w-[25rem]"
+        class="glass terminal-frame relative z-20 max-h-[22rem] overflow-y-auto overflow-x-hidden rounded-sm p-4 md:fixed md:left-auto md:right-8 md:top-32 md:w-[25rem]"
         aria-label="Browser-visible identity telemetry"
       >
         <div class="flex items-center justify-between border-b border-matrix/20 pb-3">
@@ -288,17 +288,35 @@
           <button
             id="trace-ip"
             class="pointer-events-auto ml-3 inline-flex min-h-11 shrink-0 items-center gap-2 border border-matrix/35 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-matrix transition-[background-color,border-color,color,opacity,transform] hover:border-phosphor hover:bg-matrix/10 hover:text-phosphor active:translate-y-px disabled:cursor-wait disabled:opacity-70"
-            aria-label="Refresh Public IP Address"
+            aria-label="Refresh IP Geolocation Trace"
             type="button"
           >
             <span class="loading-dot" aria-hidden="true"></span>
-            <span>Refresh IP</span>
+            <span>Trace Geo</span>
           </button>
         </div>
         <div class="mt-3 space-y-2 font-mono text-[10px] uppercase tracking-[0.12em] text-matrix/70">
           <div class="flex justify-between gap-4 border-b border-matrix/10 pb-1">
             <span>Public IP</span>
             <span id="ip-address" class="max-w-[13rem] truncate text-right text-surveillance" aria-live="polite">Tracing…</span>
+          </div>
+          <div class="border border-matrix/20 bg-carbon/65 p-3" aria-live="polite">
+            <p class="text-matrix/48">Approx IP Location</p>
+            <p id="geo-primary" class="mt-2 truncate text-base normal-case tracking-normal text-phosphor">Resolving network origin…</p>
+            <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
+              <span>Region</span>
+              <span id="geo-region" class="truncate text-right text-phosphor/82">pending</span>
+              <span>Coordinates</span>
+              <span id="geo-coordinates" class="truncate text-right text-surveillance">pending</span>
+              <span>Timezone</span>
+              <span id="geo-timezone" class="truncate text-right text-phosphor/82">pending</span>
+              <span>Network</span>
+              <span id="geo-network" class="truncate text-right text-phosphor/82">pending</span>
+              <span>ASN</span>
+              <span id="geo-asn" class="truncate text-right text-phosphor/82">pending</span>
+              <span>Precision</span>
+              <span id="geo-precision" class="truncate text-right text-matrix">IP-level estimate</span>
+            </div>
           </div>
           <div class="border-t border-matrix/20 pt-2">
             <p class="text-matrix/48">Current-origin cookies</p>
@@ -375,6 +393,13 @@
       const cookieReadoutEl = document.getElementById("cookie-readout");
       const ipAddressEl = document.getElementById("ip-address");
       const traceIpButton = document.getElementById("trace-ip");
+      const geoPrimaryEl = document.getElementById("geo-primary");
+      const geoRegionEl = document.getElementById("geo-region");
+      const geoCoordinatesEl = document.getElementById("geo-coordinates");
+      const geoTimezoneEl = document.getElementById("geo-timezone");
+      const geoNetworkEl = document.getElementById("geo-network");
+      const geoAsnEl = document.getElementById("geo-asn");
+      const geoPrecisionEl = document.getElementById("geo-precision");
       const entropyScoreEl = document.getElementById("entropy-score");
       const vectorScoreEl = document.getElementById("vector-score");
       const leakScoreEl = document.getElementById("leak-score");
@@ -511,22 +536,69 @@
         }
       }
 
+      function setGeoFallback(label) {
+        geoPrimaryEl.textContent = label;
+        geoRegionEl.textContent = "unresolved";
+        geoCoordinatesEl.textContent = "unresolved";
+        geoTimezoneEl.textContent = "unresolved";
+        geoNetworkEl.textContent = "unresolved";
+        geoAsnEl.textContent = "unresolved";
+        geoPrecisionEl.textContent = "IP lookup unavailable";
+      }
+
+      function formatCoordinate(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) return "unknown";
+        return numericValue.toFixed(4);
+      }
+
+      function renderGeoTrace(data) {
+        const connection = data.connection || {};
+        const timezone = data.timezone || {};
+        const city = data.city || "Unknown city";
+        const region = data.region || "Unknown region";
+        const country = data.country_name || data.country || data.country_code || "Unknown country";
+        const latitude = formatCoordinate(data.latitude);
+        const longitude = formatCoordinate(data.longitude);
+        const network = connection.isp || connection.org || data.org || data.organization_name || data.organization || "Unknown network";
+        const asn = connection.asn ? `AS${connection.asn}` : data.asn || "unknown";
+        const zone = timezone.id || data.timezone || "unknown";
+        const precision = data.accuracy ? `Approx. ±${data.accuracy} km` : "Approximate IP geolocation";
+
+        ipAddressEl.textContent = data.ip || "masked";
+        geoPrimaryEl.textContent = `${city}, ${country}`;
+        geoRegionEl.textContent = region;
+        geoCoordinatesEl.textContent = `${latitude}, ${longitude}`;
+        geoTimezoneEl.textContent = zone;
+        geoNetworkEl.textContent = network;
+        geoAsnEl.textContent = asn;
+        geoPrecisionEl.textContent = precision;
+
+        leakEventCount += 1;
+        addFeed(`> GEO_TRACE_LOCK :: ${city}, ${region}, ${country}`, true);
+        addFeed(`> NETWORK_TRACE :: ${asn} / ${network}`);
+        updateMetrics();
+      }
+
       async function tracePublicIp() {
         traceIpButton.disabled = true;
         traceIpButton.classList.add("is-loading");
         traceIpButton.setAttribute("aria-busy", "true");
         ipAddressEl.textContent = "requesting…";
-        addFeed("> IP_TRACE_AUTO :: outbound lookup requested", true);
+        geoPrimaryEl.textContent = "Resolving network origin…";
+        geoPrecisionEl.textContent = "Querying IP intelligence";
+        addFeed("> GEO_TRACE_AUTO :: outbound lookup requested", true);
 
         try {
-          const response = await fetch("https://api.ipify.org?format=json", { cache: "no-store" });
+          const response = await fetch("https://get.geojs.io/v1/ip/geo.json", { cache: "no-store" });
           if (!response.ok) throw new Error("lookup failed");
           const data = await response.json();
-          ipAddressEl.textContent = data.ip || "masked";
-          addFeed(`> IP_TRACE_RESULT :: ${data.ip || "masked"}`, true);
+          if (data.error || data.success === false) throw new Error(data.reason || data.message || "lookup failed");
+          renderGeoTrace(data);
         } catch (error) {
           ipAddressEl.textContent = "blocked";
-          addFeed("> IP_TRACE_FAILED :: endpoint blocked", true);
+          setGeoFallback("Geo trace blocked");
+          addFeed("> GEO_TRACE_FAILED :: endpoint blocked", true);
         } finally {
           traceIpButton.classList.remove("is-loading");
           traceIpButton.removeAttribute("aria-busy");
