@@ -137,6 +137,7 @@
       }
 
       .glass {
+        contain: layout paint;
         background: rgba(0, 14, 6, 0.64);
         border: 1px solid rgba(0, 255, 65, 0.22);
         box-shadow:
@@ -144,8 +145,8 @@
           0 1px 0 rgba(255, 255, 255, 0.06),
           0 0 34px rgba(0, 255, 65, 0.08),
           inset 0 1px 0 rgba(216, 255, 224, 0.08);
-        backdrop-filter: blur(12px) saturate(130%);
-        -webkit-backdrop-filter: blur(12px) saturate(130%);
+        backdrop-filter: blur(7px) saturate(115%);
+        -webkit-backdrop-filter: blur(7px) saturate(115%);
       }
 
       .accent-line {
@@ -234,6 +235,11 @@
 
         body {
           min-height: 100svh;
+        }
+
+        .glass {
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
         }
       }
 
@@ -431,13 +437,19 @@
       let satelliteRevealCells = [];
       let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      const maxTrailPoints = 620;
-      const maxFeedLines = 18;
       const matrixGreen = [0, 255, 65];
       const matrixDim = [0, 143, 47];
       const phosphor = [216, 255, 224];
       const alertRed = [255, 0, 51];
       const matrixGlyphs = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&*+-/<>[]{}";
+      const lowPowerMode = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+      const maxTrailPoints = lowPowerMode ? 240 : 340;
+      const maxFeedLines = 18;
+      const renderPixelRatio = 1;
+      const matrixFrameSkip = lowPowerMode ? 3 : 2;
+      const movementTrailInterval = lowPowerMode ? 26 : 18;
+      const movementFeedInterval = lowPowerMode ? 260 : 190;
+      const revealCellSize = lowPowerMode ? 52 : 44;
 
       window.matchMedia("(prefers-reduced-motion: reduce)").addEventListener?.("change", (event) => {
         reducedMotion = event.matches;
@@ -637,7 +649,8 @@
       function setup() {
         const canvas = createCanvas(windowWidth, windowHeight);
         canvas.parent("canvas-host");
-        pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
+        pixelDensity(renderPixelRatio);
+        frameRate(lowPowerMode ? 36 : 48);
         textFont("Roboto Mono");
         initMatrixRain();
         pointerIdleX = width * 0.5;
@@ -731,7 +744,7 @@
       }
 
       function startSatelliteReveal(originX, originY) {
-        const cellSize = width < 720 ? 22 : 30;
+        const cellSize = width < 720 ? 32 : revealCellSize;
         const cols = Math.ceil(width / cellSize) + 1;
         const rows = Math.ceil(height / cellSize) + 1;
         const maxDistance = Math.max(
@@ -757,6 +770,7 @@
               delay: distanceRatio * (reducedMotion ? 120 : 740) + jitter,
               duration: random(reducedMotion ? 120 : 260, reducedMotion ? 180 : 520),
               glyph: matrixGlyphs[Math.floor(random(matrixGlyphs.length))],
+              showGlyph: random() > (lowPowerMode ? 0.72 : 0.56),
               tone: random() > 0.72 ? "hot" : random() > 0.45 ? "dim" : "dark",
             });
           }
@@ -851,7 +865,7 @@
           fill(0, baseGreen, 16, 232 * coverAlpha);
           rect(cell.x, cell.y, satelliteReveal.cellSize + 1, satelliteReveal.cellSize + 1);
 
-          if (progress > 0.08 && progress < 0.86) {
+          if (cell.showGlyph && progress > 0.08 && progress < 0.86) {
             fill(0, 255, 65, (80 + edgePulse * 150) * satelliteAlpha);
             rect(cell.x, cell.y, satelliteReveal.cellSize + 1, Math.max(2, satelliteReveal.cellSize * 0.08));
             fill(216, 255, 224, (55 + edgePulse * 145) * satelliteAlpha);
@@ -866,16 +880,17 @@
       }
 
       function initMatrixRain() {
-        const spacing = width < 720 ? 18 : 22;
+        const spacing = width < 720 ? 24 : lowPowerMode ? 42 : 34;
         const count = Math.ceil(width / spacing) + 2;
 
         matrixColumns = Array.from({ length: count }, (_, index) => ({
           x: index * spacing + random(-4, 4),
           y: random(-height, height),
-          speed: random(0.7, 2.8),
-          length: Math.floor(random(10, 28)),
+          speed: random(0.6, lowPowerMode ? 1.9 : 2.4),
+          length: Math.floor(random(8, lowPowerMode ? 18 : 23)),
           spacing,
           alpha: random(0.28, 0.72),
+          phase: index % matrixFrameSkip,
           seed: Math.floor(random(matrixGlyphs.length)),
         }));
       }
@@ -893,15 +908,19 @@
         const rainVisibility = Math.max(0.12, 1 - satelliteAlpha * 0.9);
 
         matrixColumns.forEach((column) => {
-          if (!reducedMotion) {
+          const shouldAdvance =
+            !reducedMotion && (matrixFrameSkip <= 1 || frameCount % matrixFrameSkip === column.phase);
+
+          if (shouldAdvance) {
             column.y += column.speed * (deltaTime / 16.67);
           }
 
           if (column.y - column.length * column.spacing > height + 60) {
             column.y = random(-220, -24);
             column.speed = random(0.8, 3.2);
-            column.length = Math.floor(random(12, 32));
+            column.length = Math.floor(random(8, lowPowerMode ? 18 : 23));
             column.alpha = random(0.32, 0.82);
+            column.phase = Math.floor(random(matrixFrameSkip));
             column.seed = Math.floor(random(matrixGlyphs.length));
           }
 
@@ -1066,7 +1085,7 @@
         pointerIdleX = x;
         pointerIdleY = y;
 
-        if (now - lastTrailAt > 9) {
+        if (now - lastTrailAt > movementTrailInterval) {
           const speed = Math.min(1, Math.sqrt(dx * dx + dy * dy) / 90);
           trails.push({
             x,
@@ -1074,12 +1093,12 @@
             vx: random(-0.16, 0.16),
             vy: random(-0.16, 0.16),
             age: 0,
-            life: random(2000, 5200),
+            life: random(1400, 3400),
             size: random(1.7, 4.8) + speed * 2,
             seed: random(1000),
             kind: random() > 0.9 ? "pale" : "matrix",
             fontSize: random(8, 11),
-            code: random() > 0.74 ? `0x${shortHash(x, y)}` : "",
+            code: random() > 0.88 ? `0x${shortHash(x, y)}` : "",
           });
 
           while (trails.length > maxTrailPoints) {
@@ -1089,7 +1108,7 @@
           lastTrailAt = now;
         }
 
-        if (now - lastMoveLoggedAt > 120) {
+        if (now - lastMoveLoggedAt > movementFeedInterval) {
           vectorEventCount += 1;
           addFeed(`> MOUSE_MOVE ${Math.round(x)},${Math.round(y)} :: packet stored`);
           lastMoveLoggedAt = now;
@@ -1126,7 +1145,8 @@
 
         addFeed(`> CLICK_DETECTED ${Math.round(x)},${Math.round(y)} :: metadata exposed`, true);
 
-        for (let i = 0; i < 36; i += 1) {
+        const burstCount = lowPowerMode ? 14 : 22;
+        for (let i = 0; i < burstCount; i += 1) {
           const angle = random(TWO_PI);
           const distance = random(8, 68);
           trails.push({
