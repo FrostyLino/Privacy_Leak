@@ -420,6 +420,13 @@
       let pointerIdleY = 0;
       let vectorEventCount = 0;
       let leakEventCount = 0;
+      let geoTrace = null;
+      let satelliteTiles = [];
+      let satelliteAlpha = 0;
+      let satelliteTargetAlpha = 0;
+      let satelliteZoom = 15;
+      let satelliteLabel = "Satellite lock pending";
+      let satelliteTileAnchor = { x: 0.5, y: 0.5 };
       let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const maxTrailPoints = 620;
@@ -544,12 +551,18 @@
         geoNetworkEl.textContent = "unresolved";
         geoAsnEl.textContent = "unresolved";
         geoPrecisionEl.textContent = "IP lookup unavailable";
+        geoTrace = null;
       }
 
       function formatCoordinate(value) {
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) return "unknown";
         return numericValue.toFixed(4);
+      }
+
+      function numericCoordinate(value) {
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : null;
       }
 
       function renderGeoTrace(data) {
@@ -560,6 +573,8 @@
         const country = data.country_name || data.country || data.country_code || "Unknown country";
         const latitude = formatCoordinate(data.latitude);
         const longitude = formatCoordinate(data.longitude);
+        const numericLatitude = numericCoordinate(data.latitude);
+        const numericLongitude = numericCoordinate(data.longitude);
         const network = connection.isp || connection.org || data.org || data.organization_name || data.organization || "Unknown network";
         const asn = connection.asn ? `AS${connection.asn}` : data.asn || "unknown";
         const zone = timezone.id || data.timezone || "unknown";
@@ -573,6 +588,17 @@
         geoNetworkEl.textContent = network;
         geoAsnEl.textContent = asn;
         geoPrecisionEl.textContent = precision;
+        geoTrace =
+          numericLatitude !== null && numericLongitude !== null
+            ? {
+                city,
+                region,
+                country,
+                latitude: numericLatitude,
+                longitude: numericLongitude,
+                precision,
+              }
+            : null;
 
         leakEventCount += 1;
         addFeed(`> GEO_TRACE_LOCK :: ${city}, ${region}, ${country}`, true);
@@ -624,11 +650,135 @@
 
       function draw() {
         clear();
+        drawSatelliteBackdrop();
         drawMatrixRain();
         drawAmbientGrid();
         drawPointerTrace();
         drawRipples();
         drawMetadataBursts();
+      }
+
+      function latLonToTile(latitude, longitude, zoom) {
+        const latRad = (latitude * Math.PI) / 180;
+        const scale = 2 ** zoom;
+        const xFloat = ((longitude + 180) / 360) * scale;
+        const yFloat = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * scale;
+        const x = Math.floor(xFloat);
+        const y = Math.floor(yFloat);
+        return { x, y, fracX: xFloat - x, fracY: yFloat - y };
+      }
+
+      function tileUrl(x, y, zoom) {
+        return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
+      }
+
+      function buildSatelliteTiles() {
+        if (!geoTrace) return;
+
+        const zoom = satelliteZoom;
+        const centerTile = latLonToTile(geoTrace.latitude, geoTrace.longitude, zoom);
+        const nextTiles = [];
+        satelliteTileAnchor = { x: centerTile.fracX, y: centerTile.fracY };
+
+        for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+          for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+            const tileX = centerTile.x + offsetX;
+            const tileY = centerTile.y + offsetY;
+            const url = tileUrl(tileX, tileY, zoom);
+            const tile = {
+              offsetX,
+              offsetY,
+              loaded: false,
+              image: null,
+              url,
+            };
+
+            tile.image = loadImage(
+              url,
+              () => {
+                tile.loaded = true;
+              },
+              () => {
+                tile.loaded = false;
+              },
+            );
+
+            nextTiles.push(tile);
+          }
+        }
+
+        satelliteTiles = nextTiles;
+        satelliteLabel = `${geoTrace.city}, ${geoTrace.country} :: ${geoTrace.precision}`;
+      }
+
+      function activateSatelliteView(x, y) {
+        if (!geoTrace) {
+          addFeed("> SATELLITE_LOCK_PENDING :: geo trace unresolved", true);
+          return;
+        }
+
+        satelliteZoom = satelliteZoom === 15 ? 16 : 15;
+        buildSatelliteTiles();
+        satelliteTargetAlpha = 0.92;
+        leakEventCount += 1;
+        addFeed(`> SATELLITE_TILE_SWAP :: ${geoTrace.city}, ${geoTrace.country}`, true);
+        addFeed(`> CLICK_COORDS_TO_ORBIT :: ${Math.round(x)},${Math.round(y)}`);
+        updateMetrics();
+      }
+
+      function drawSatelliteBackdrop() {
+        const easing = reducedMotion ? 1 : 0.045;
+        satelliteAlpha += (satelliteTargetAlpha - satelliteAlpha) * easing;
+
+        if (satelliteAlpha <= 0.01) return;
+
+        push();
+        tint(255, 255 * satelliteAlpha);
+
+        const loadedTiles = satelliteTiles.filter((tile) => tile.loaded && tile.image);
+        if (loadedTiles.length) {
+          const tileSize = Math.max(width, height) / 2.05;
+          const centerX = width * 0.5;
+          const centerY = height * 0.5;
+
+          loadedTiles.forEach((tile) => {
+            image(
+              tile.image,
+              centerX + (tile.offsetX - satelliteTileAnchor.x) * tileSize,
+              centerY + (tile.offsetY - satelliteTileAnchor.y) * tileSize,
+              tileSize + 1,
+              tileSize + 1,
+            );
+          });
+        } else {
+          noStroke();
+          fill(0, 24, 10, 150 * satelliteAlpha);
+          rect(0, 0, width, height);
+        }
+
+        noTint();
+        noStroke();
+        fill(0, 0, 0, 92 * satelliteAlpha);
+        rect(0, 0, width, height);
+        fill(0, 255, 65, 24 * satelliteAlpha);
+        rect(0, 0, width, height);
+
+        noFill();
+        strokeWeight(1);
+        stroke(255, 0, 51, 185 * satelliteAlpha);
+        circle(width * 0.5, height * 0.5, 78);
+        stroke(216, 255, 224, 125 * satelliteAlpha);
+        line(width * 0.5 - 58, height * 0.5, width * 0.5 - 18, height * 0.5);
+        line(width * 0.5 + 18, height * 0.5, width * 0.5 + 58, height * 0.5);
+        line(width * 0.5, height * 0.5 - 58, width * 0.5, height * 0.5 - 18);
+        line(width * 0.5, height * 0.5 + 18, width * 0.5, height * 0.5 + 58);
+
+        textAlign(LEFT, BASELINE);
+        textFont("Roboto Mono");
+        textSize(11);
+        fill(216, 255, 224, 180 * satelliteAlpha);
+        text(`SATELLITE_VIEW :: ${satelliteLabel}`, 28, height - 28);
+        pop();
       }
 
       function initMatrixRain() {
@@ -656,6 +806,7 @@
         textAlign(CENTER, TOP);
         textSize(width < 720 ? 13 : 15);
         noStroke();
+        const rainVisibility = Math.max(0.12, 1 - satelliteAlpha * 0.9);
 
         matrixColumns.forEach((column) => {
           if (!reducedMotion) {
@@ -676,7 +827,7 @@
 
             const life = 1 - i / column.length;
             const flicker = reducedMotion ? 0.86 : 0.74 + Math.sin(frameCount * 0.05 + column.seed + i) * 0.26;
-            const alpha = 210 * life * column.alpha * flicker;
+            const alpha = 210 * life * column.alpha * flicker * rainVisibility;
 
             if (i === 0) {
               fill(phosphor[0], phosphor[1], phosphor[2], Math.min(210, alpha + 60));
@@ -864,6 +1015,7 @@
       function registerClick(x, y) {
         const timestamp = currentTimestamp();
         leakEventCount += 1;
+        activateSatelliteView(x, y);
         ripples.push({
           x,
           y,
