@@ -13,8 +13,8 @@
         theme: {
           extend: {
             fontFamily: {
-              inter: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-              mono: ["Roboto Mono", "SFMono-Regular", "Consolas", "monospace"],
+              inter: ["VT323", "Courier New", "monospace"],
+              mono: ["VT323", "Courier New", "monospace"],
             },
             colors: {
               carbon: "#020402",
@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -53,15 +53,11 @@
         min-height: 100%;
         margin: 0;
         color-scheme: dark;
-        overflow: hidden;
         background:
-          linear-gradient(rgba(0, 255, 65, 0.035) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0, 255, 65, 0.026) 1px, transparent 1px),
-          radial-gradient(circle at 48% 0%, rgba(0, 255, 65, 0.14), transparent 31rem),
-          radial-gradient(circle at 82% 74%, rgba(255, 0, 51, 0.05), transparent 24rem),
+          radial-gradient(circle at 48% 0%, rgba(0, 255, 65, 0.1), transparent 31rem),
+          radial-gradient(circle at 82% 74%, rgba(255, 0, 51, 0.04), transparent 24rem),
           var(--carbon);
-        background-size: 32px 32px, 32px 32px, auto, auto, auto;
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-family: 'VT323', 'Courier New', monospace;
         font-variant-numeric: tabular-nums;
       }
 
@@ -87,8 +83,8 @@
         background: rgba(0, 12, 4, 0.96);
         color: var(--phosphor);
         padding: 0.75rem 1rem;
-        font-family: "Roboto Mono", monospace;
-        font-size: 0.75rem;
+        font-family: 'VT323', 'Courier New', monospace;
+        font-size: 0.9rem;
         text-transform: uppercase;
         transition: transform 160ms ease, border-color 160ms ease;
       }
@@ -103,28 +99,260 @@
         inset: 0;
         z-index: 1;
         pointer-events: none;
-        background:
-          linear-gradient(180deg, rgba(0, 255, 65, 0.06), rgba(0, 255, 65, 0) 14%),
-          repeating-linear-gradient(
-            0deg,
-            rgba(0, 255, 65, 0.075) 0,
-            rgba(0, 255, 65, 0.075) 1px,
-            transparent 1px,
-            transparent 6px
-          );
-        mix-blend-mode: screen;
-        opacity: 0.24;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 255, 65, 0.03) 0,
+          rgba(0, 255, 65, 0.03) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+        opacity: 0.25;
       }
 
-      body::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: 2;
-        pointer-events: none;
-        background:
-          radial-gradient(circle at 50% 50%, transparent 0, rgba(0, 0, 0, 0.06) 42%, rgba(0, 0, 0, 0.76) 100%),
-          linear-gradient(90deg, rgba(0, 255, 65, 0.09), transparent 22%, transparent 78%, rgba(0, 255, 65, 0.07));
+      .page-wrap {
+        position: relative;
+        z-index: 10;
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 2rem 2rem 4rem;
+      }
+
+      .site-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid rgba(0, 255, 65, 0.15);
+        margin-bottom: 2.5rem;
+      }
+
+      .site-header .name {
+        font-size: 1.1rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--phosphor);
+      }
+
+      .site-header .status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: rgba(0,255,65,0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .hero-section { margin-bottom: 2.5rem; }
+
+      .hero-section .label {
+        font-size: 1rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(0,255,65,0.45);
+        margin-bottom: 0.8rem;
+      }
+
+      .hero-section h1 {
+        font-family: 'VT323', monospace;
+        font-size: clamp(3.2rem, 8vw, 6.5rem);
+        font-weight: 400;
+        line-height: 0.95;
+        color: var(--phosphor);
+        text-shadow: 0 0 25px rgba(0,255,65,0.2);
+        margin: 0;
+      }
+
+      .hero-section .sub {
+        margin-top: 1.2rem;
+        font-size: 1.15rem;
+        color: rgba(0,255,65,0.5);
+        max-width: 520px;
+        line-height: 1.5;
+      }
+
+      .stats-row {
+        display: flex;
+        gap: 2.5rem;
+        margin-top: 1.8rem;
+        padding-top: 1.2rem;
+        border-top: 1px solid rgba(0,255,65,0.1);
+      }
+
+      .stat-val {
+        font-size: 1.8rem;
+        color: var(--phosphor);
+        line-height: 1;
+      }
+
+      .stat-val.alert { color: var(--surveillance-red); }
+
+      .stat-label {
+        display: block;
+        font-size: 0.85rem;
+        color: rgba(0,255,65,0.35);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 0.2rem;
+      }
+
+      .panels-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .terminal {
+        background: rgba(0, 14, 6, 0.7);
+        border: 1px solid rgba(0, 255, 65, 0.16);
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .panels-grid .terminal:last-child {
+        align-self: stretch;
+      }
+
+      .panels-grid .terminal:last-child .terminal-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .terminal-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 0.85rem;
+        background: rgba(0, 20, 8, 0.75);
+        border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+      }
+
+      .terminal-dots {
+        display: flex;
+        gap: 5px;
+      }
+
+      .terminal-dots span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .terminal-dots span:nth-child(1) { background: #ff5f57; }
+      .terminal-dots span:nth-child(2) { background: #ffbd2e; }
+      .terminal-dots span:nth-child(3) { background: #28c840; }
+
+      .terminal-title {
+        font-size: 0.85rem;
+        color: rgba(0,255,65,0.45);
+        letter-spacing: 0.06em;
+        margin-left: 0.4rem;
+      }
+
+      .terminal-body { padding: 1rem; }
+
+      .fp-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.3rem 0;
+        border-bottom: 1px solid rgba(0,255,65,0.06);
+        font-size: 1rem;
+      }
+      .fp-row:last-child { border-bottom: none; }
+      .fp-key { color: rgba(0,255,65,0.4); text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.06em; }
+      .fp-val { color: var(--phosphor); text-align: right; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .fp-val.red { color: var(--surveillance-red); }
+
+      .geo-block {
+        background: rgba(0,10,4,0.5);
+        border: 1px solid rgba(0,255,65,0.1);
+        padding: 0.75rem;
+        margin: 0.6rem 0;
+      }
+      .geo-city { font-size: 1.35rem; color: var(--phosphor); }
+      .geo-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.2rem 0.8rem;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+      }
+      .geo-grid .key { color: rgba(0,255,65,0.35); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.85rem; }
+      .geo-grid .val { color: var(--phosphor); opacity: 0.75; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .geo-grid .val.red { color: var(--surveillance-red); opacity: 1; }
+
+      .section-sep {
+        border: none;
+        border-top: 1px solid rgba(0,255,65,0.07);
+        margin: 0.6rem 0;
+      }
+
+      .cookie-lbl { font-size: 0.85rem; color: rgba(0,255,65,0.3); text-transform: uppercase; letter-spacing: 0.08em; }
+      .cookie-val { font-size: 0.9rem; color: var(--phosphor); opacity: 0.65; word-break: break-all; margin-top: 0.15rem; }
+
+      .trace-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'VT323', monospace;
+        font-size: 1rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--matrix-green);
+        background: transparent;
+        border: 1px solid rgba(0,255,65,0.3);
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .trace-btn:hover { background: rgba(0,255,65,0.08); border-color: var(--phosphor); color: var(--phosphor); }
+      .trace-btn:disabled { opacity: 0.5; cursor: wait; }
+
+      .feed-body {
+        flex: 1;
+        min-height: 200px;
+        overflow-y: auto;
+        font-size: 1rem;
+        line-height: 1.8;
+        color: rgba(0,255,65,0.5);
+      }
+
+      .data-feed-line { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .data-feed-line.accent { color: var(--surveillance-red); }
+      .data-feed-line.fresh { color: var(--phosphor); }
+
+      .loading-dot {
+        display: none;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--matrix-green);
+      }
+      .is-loading .loading-dot {
+        display: inline-block;
+        animation: blink 0.8s ease-in-out infinite;
+      }
+
+      .site-footer {
+        margin-top: 2.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid rgba(0,255,65,0.1);
+        font-size: 0.9rem;
+        color: rgba(0,255,65,0.25);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-align: center;
+      }
+
+      @media (max-width: 768px) {
+        .page-wrap { padding: 1.25rem 1rem 3rem; }
+        .panels-grid { grid-template-columns: 1fr; }
+        .stats-row { flex-wrap: wrap; gap: 1.5rem; }
       }
 
       #canvas-host,
@@ -255,141 +483,97 @@
       }
     </style>
   </head>
-  <body class="text-phosphor antialiased">
-    <a class="skip-link" href="#main-content">Skip To Content</a>
+  <body>
     <div id="canvas-host" aria-hidden="true"></div>
 
-    <main
-      id="main-content"
-      class="relative z-10 flex min-h-svh flex-col justify-between gap-5 px-5 py-5 sm:px-8 sm:py-7 lg:px-10"
-    >
-      <header class="flex items-start justify-between gap-4">
-        <div class="glass terminal-frame rounded-sm px-4 py-3 sm:px-5">
-          <p class="font-mono text-[10px] font-medium uppercase tracking-[0.34em] text-matrix/58">
-            Root Trace Monitor
-          </p>
-          <h1 class="mt-1 font-mono text-sm font-semibold uppercase tracking-[0.22em] text-phosphor sm:text-base">
-            THE TRANSPARENCY SHADOW
-          </h1>
-        </div>
-
-        <div class="glass terminal-frame hidden rounded-sm px-4 py-3 text-right font-mono text-[10px] uppercase tracking-[0.24em] text-matrix/62 sm:block">
-          <div class="flex items-center justify-end gap-2">
-            <span class="status-pulse h-2 w-2 rounded-full bg-matrix"></span>
-            <span>Root Capture</span>
-          </div>
-          <div id="event-count" class="mt-1 text-phosphor">0 indexed events</div>
+    <div class="page-wrap">
+      <header class="site-header">
+        <span class="name">The Transparency Shadow</span>
+        <div class="status">
+          <span class="status-dot"></span>
+          <span id="event-count">0 events</span>
         </div>
       </header>
 
-      <aside
-        class="glass terminal-frame relative z-20 max-h-[22rem] overflow-y-auto overflow-x-hidden rounded-sm p-4 md:fixed md:left-auto md:right-8 md:top-32 md:w-[25rem]"
-        aria-label="Browser-visible identity telemetry"
-      >
-        <div class="flex items-center justify-between border-b border-matrix/20 pb-3">
-          <div class="min-w-0">
-            <p class="font-mono text-[10px] uppercase tracking-[0.32em] text-matrix/48">Identity Dump</p>
-            <p class="mt-1 truncate font-mono text-xs uppercase tracking-[0.18em] text-phosphor">/proc/browser_fingerprint</p>
+      <section class="hero-section">
+        <p class="label">Terminal Exposure Protocol</p>
+        <h1>PRIVATE IS PUBLIC</h1>
+        <p class="sub">Every move you make is a data point in someone else's ledger.</p>
+        <div class="stats-row">
+          <div>
+            <span class="stat-val" id="entropy-score">00.00%</span>
+            <span class="stat-label">Entropy</span>
           </div>
-          <button
-            id="trace-ip"
-            class="pointer-events-auto ml-3 inline-flex min-h-11 shrink-0 items-center gap-2 border border-matrix/35 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-matrix transition-[background-color,border-color,color,opacity,transform] hover:border-phosphor hover:bg-matrix/10 hover:text-phosphor active:translate-y-px disabled:cursor-wait disabled:opacity-70"
-            aria-label="Refresh IP Geolocation Trace"
-            type="button"
-          >
-            <span class="loading-dot" aria-hidden="true"></span>
-            <span>Trace Geo</span>
-          </button>
-        </div>
-        <div class="mt-3 space-y-2 font-mono text-[10px] uppercase tracking-[0.12em] text-matrix/70">
-          <div class="flex justify-between gap-4 border-b border-matrix/10 pb-1">
-            <span>Public IP</span>
-            <span id="ip-address" class="max-w-[13rem] truncate text-right text-surveillance" aria-live="polite">Tracing…</span>
+          <div>
+            <span class="stat-val" id="vector-score">0000</span>
+            <span class="stat-label">Vectors</span>
           </div>
-          <div class="border border-matrix/20 bg-carbon/65 p-3" aria-live="polite">
-            <p class="text-matrix/48">Approx IP Location</p>
-            <p id="geo-primary" class="mt-2 truncate text-base normal-case tracking-normal text-phosphor">Resolving network origin…</p>
-            <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
-              <span>Region</span>
-              <span id="geo-region" class="truncate text-right text-phosphor/82">pending</span>
-              <span>Coordinates</span>
-              <span id="geo-coordinates" class="truncate text-right text-surveillance">pending</span>
-              <span>Timezone</span>
-              <span id="geo-timezone" class="truncate text-right text-phosphor/82">pending</span>
-              <span>Network</span>
-              <span id="geo-network" class="truncate text-right text-phosphor/82">pending</span>
-              <span>ASN</span>
-              <span id="geo-asn" class="truncate text-right text-phosphor/82">pending</span>
-              <span>Precision</span>
-              <span id="geo-precision" class="truncate text-right text-matrix">IP-level estimate</span>
-            </div>
-          </div>
-          <div class="border-t border-matrix/20 pt-2">
-            <p class="text-matrix/48">Current-origin cookies</p>
-            <p id="cookie-readout" class="mt-1 break-all normal-case tracking-normal text-phosphor/78" aria-live="polite">
-              Scanning…
-            </p>
-          </div>
-          <div id="fingerprint-list" class="space-y-1"></div>
-        </div>
-      </aside>
-
-      <section class="pointer-events-none flex flex-1 items-center py-4 md:py-0">
-        <div class="accent-line glass terminal-frame max-w-3xl rounded-sm px-5 py-6 pl-7 sm:px-8 sm:py-8 sm:pl-10 lg:ml-[5vw]">
-          <p class="font-mono text-[10px] font-semibold uppercase tracking-[0.45em] text-matrix/80">
-            Terminal Exposure Protocol
-          </p>
-          <h2 class="red-glow mt-4 max-w-2xl text-balance font-mono text-5xl font-extrabold uppercase leading-[0.9] text-phosphor sm:text-7xl lg:text-8xl">
-            PRIVATE IS PUBLIC
-          </h2>
-          <p class="mt-5 max-w-2xl font-mono text-sm leading-7 text-matrix/72 sm:text-base">
-            Every move you make is a data point in someone else’s ledger.
-          </p>
-          <div class="mt-7 grid max-w-2xl grid-cols-1 gap-px border border-matrix/20 bg-matrix/15 font-mono text-[10px] uppercase tracking-[0.14em] text-matrix/64 sm:grid-cols-3">
-            <div class="bg-carbon/80 px-4 py-3">
-              <p>Signal Entropy</p>
-              <p id="entropy-score" class="mt-2 text-lg tracking-normal text-phosphor">00.00%</p>
-            </div>
-            <div class="bg-carbon/80 px-4 py-3">
-              <p>Pointer Vectors</p>
-              <p id="vector-score" class="mt-2 text-lg tracking-normal text-phosphor">0000</p>
-            </div>
-            <div class="bg-carbon/80 px-4 py-3">
-              <p>Leak Events</p>
-              <p id="leak-score" class="mt-2 text-lg tracking-normal text-surveillance">00</p>
-            </div>
+          <div>
+            <span class="stat-val alert" id="leak-score">00</span>
+            <span class="stat-label">Leaks</span>
           </div>
         </div>
       </section>
 
-      <aside
-        class="glass terminal-frame relative z-20 rounded-sm p-4 md:fixed md:bottom-7 md:left-auto md:right-8 md:w-[25rem]"
-        aria-label="Live user action data feed"
-      >
-        <div class="flex items-center justify-between border-b border-matrix/20 pb-3">
-          <div>
-            <p class="font-mono text-[10px] uppercase tracking-[0.32em] text-matrix/48">Data Feed</p>
-            <p class="mt-1 font-mono text-xs uppercase tracking-[0.18em] text-phosphor">/var/log/action_stream</p>
+      <div class="panels-grid">
+        <div class="terminal" aria-label="Browser identity data">
+          <div class="terminal-bar">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <span class="terminal-title">/proc/browser_fingerprint</span>
+            <button id="trace-ip" class="trace-btn" style="margin-left:auto" type="button" aria-label="Trace IP">
+              <span class="loading-dot" aria-hidden="true"></span>
+              Trace Geo
+            </button>
           </div>
-          <div class="flex gap-1.5" aria-hidden="true">
-            <span class="h-2 w-2 rounded-full bg-matrix shadow-[0_0_14px_rgba(0,255,65,0.9)]"></span>
-            <span class="h-2 w-2 rounded-full bg-matrixdim shadow-[0_0_12px_rgba(0,143,47,0.8)]"></span>
-            <span class="h-2 w-2 rounded-full bg-surveillance/80 shadow-[0_0_12px_rgba(255,0,51,0.72)]"></span>
+          <div class="terminal-body">
+            <div class="fp-row">
+              <span class="fp-key">Public IP</span>
+              <span class="fp-val red" id="ip-address" aria-live="polite">Tracing…</span>
+            </div>
+            <div class="geo-block" aria-live="polite">
+              <p class="cookie-lbl">Approx IP Location</p>
+              <p class="geo-city" id="geo-primary">Resolving network origin…</p>
+              <div class="geo-grid">
+                <span class="key">Region</span>
+                <span class="val" id="geo-region">pending</span>
+                <span class="key">Coordinates</span>
+                <span class="val red" id="geo-coordinates">pending</span>
+                <span class="key">Timezone</span>
+                <span class="val" id="geo-timezone">pending</span>
+                <span class="key">Network</span>
+                <span class="val" id="geo-network">pending</span>
+                <span class="key">ASN</span>
+                <span class="val" id="geo-asn">pending</span>
+                <span class="key">Precision</span>
+                <span class="val" id="geo-precision">IP-level estimate</span>
+              </div>
+            </div>
+            <hr class="section-sep">
+            <p class="cookie-lbl">Current-origin cookies</p>
+            <p class="cookie-val" id="cookie-readout" aria-live="polite">Scanning…</p>
+            <hr class="section-sep">
+            <div id="fingerprint-list"></div>
           </div>
         </div>
-        <div
-          id="data-feed"
-          class="mt-3 h-36 overflow-hidden font-mono text-[11px] leading-relaxed text-matrix/62 sm:h-44"
-          role="log"
-          aria-live="polite"
-          aria-relevant="additions text"
-        >
-          <span class="data-feed-line text-phosphor">&gt; /dev/shadow_trace mounted</span>
-          <span class="data-feed-line">&gt; IDENTITY_LAYER :: porous</span>
-          <span class="data-feed-line">&gt; MATRIX_RAIN :: synchronized</span>
+
+        <div class="terminal" aria-label="Live action data feed">
+          <div class="terminal-bar">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <span class="terminal-title">/var/log/action_stream</span>
+          </div>
+          <div class="terminal-body">
+            <div id="data-feed" class="feed-body" role="log" aria-live="polite" aria-relevant="additions text">
+              <span class="data-feed-line">&gt; /dev/shadow_trace mounted</span>
+              <span class="data-feed-line">&gt; IDENTITY_LAYER :: porous</span>
+              <span class="data-feed-line">&gt; MATRIX_RAIN :: synchronized</span>
+            </div>
+          </div>
         </div>
-      </aside>
-    </main>
+      </div>
+
+      <footer class="site-footer">click anywhere. we're watching.</footer>
+    </div>
+ </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
     <script>
@@ -434,6 +618,7 @@
       let satelliteLabel = "Satellite lock pending";
       let satelliteTileAnchor = { x: 0.5, y: 0.5 };
       let satelliteReveal = null;
+      let satelliteActive = false;
       let satelliteRevealCells = [];
       let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -488,12 +673,12 @@
         feedEl.innerHTML = feedLines
           .map((entry, index) => {
             const alpha = Math.max(0.2, 1 - index * 0.06).toFixed(2);
-            const color = accent && index === 0 ? "text-surveillance" : index === 0 ? "text-phosphor" : "";
-            return `<span class="data-feed-line ${color}" style="opacity:${alpha}">${escapeHtml(entry)}</span>`;
+            const cls = accent && index === 0 ? "accent" : index === 0 ? "fresh" : "";
+            return `<span class="data-feed-line ${cls}" style="opacity:${alpha}">${escapeHtml(entry)}</span>`;
           })
           .join("");
 
-        eventCountEl.textContent = `${eventCount} indexed event${eventCount === 1 ? "" : "s"}`;
+        eventCountEl.textContent = `${eventCount} events`;
         updateMetrics();
       }
 
@@ -535,9 +720,9 @@
         fingerprintListEl.innerHTML = rows
           .map(
             ([label, value]) => `
-              <div class="flex justify-between gap-4 border-b border-matrix/10 pb-1">
-                <span>${escapeHtml(label)}</span>
-                <span class="max-w-[13rem] truncate text-right text-phosphor/82">${escapeHtml(value)}</span>
+              <div class="fp-row">
+                <span class="fp-key">${escapeHtml(label)}</span>
+                <span class="fp-val">${escapeHtml(value)}</span>
               </div>
             `,
           )
@@ -651,7 +836,7 @@
         canvas.parent("canvas-host");
         pixelDensity(renderPixelRatio);
         frameRate(lowPowerMode ? 36 : 48);
-        textFont("Roboto Mono");
+        textFont("VT323");
         initMatrixRain();
         pointerIdleX = width * 0.5;
         pointerIdleY = height * 0.5;
@@ -732,14 +917,23 @@
           return;
         }
 
+        // Toggle: if satellite is showing, hide it and return to matrix
+        if (satelliteActive) {
+          satelliteActive = false;
+          satelliteTargetAlpha = 0;
+          addFeed("> SATELLITE_VIEW_OFF :: returning to matrix", true);
+          return;
+        }
+
+        // Show satellite
+        satelliteActive = true;
         satelliteZoom = satelliteZoom === 15 ? 16 : 15;
         buildSatelliteTiles();
         startSatelliteReveal(x, y);
         satelliteTargetAlpha = 0.92;
         leakEventCount += 1;
-        addFeed(`> SATELLITE_TILE_SWAP :: ${geoTrace.city}, ${geoTrace.country}`, true);
-        addFeed("> MATRIX_PIXEL_REVEAL :: satellite layer decoding");
-        addFeed(`> CLICK_COORDS_TO_ORBIT :: ${Math.round(x)},${Math.round(y)}`);
+        addFeed(`> SATELLITE_LOCK :: ${geoTrace.city}, ${geoTrace.country}`, true);
+        addFeed(`> CLICK_COORDS :: ${Math.round(x)},${Math.round(y)}`);
         updateMetrics();
       }
 
@@ -834,7 +1028,7 @@
         line(width * 0.5, height * 0.5 + 18, width * 0.5, height * 0.5 + 58);
 
         textAlign(LEFT, BASELINE);
-        textFont("Roboto Mono");
+        textFont("VT323");
         textSize(11);
         fill(216, 255, 224, 180 * satelliteAlpha);
         text(`SATELLITE_VIEW :: ${satelliteLabel}`, 28, height - 28);
@@ -849,7 +1043,7 @@
 
         noStroke();
         textAlign(CENTER, CENTER);
-        textFont("Roboto Mono");
+        textFont("VT323");
         textSize(Math.max(9, satelliteReveal.cellSize * 0.42));
 
         satelliteRevealCells.forEach((cell) => {
@@ -901,7 +1095,7 @@
       }
 
       function drawMatrixRain() {
-        textFont("Roboto Mono");
+        textFont("VT323");
         textAlign(CENTER, TOP);
         textSize(width < 720 ? 13 : 15);
         noStroke();
@@ -962,7 +1156,7 @@
       function drawPointerTrace() {
         noStroke();
         textAlign(LEFT, BASELINE);
-        textFont("Roboto Mono");
+        textFont("VT323");
 
         for (let i = trails.length - 1; i >= 0; i -= 1) {
           const point = trails[i];
@@ -1036,7 +1230,7 @@
 
           push();
           translate(x, y);
-          textFont("Roboto Mono");
+          textFont("VT323");
           textAlign(LEFT, BASELINE);
           textSize(11);
           strokeWeight(1);
